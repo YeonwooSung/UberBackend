@@ -1,3 +1,5 @@
+'use strict'
+
 //import required libraries
 let createError = require('http-errors');
 let express = require('express');
@@ -7,12 +9,28 @@ let logger = require('morgan');
 
 let app = express();
 
+const bodyParser = require('body-parser');
+const { soap } = require('strong-soap');
+require('body-parser-xml')(bodyParser);
+
+
 //basic set ups
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.xml());
+
+
+//TODO
+
+app.use('/soap', require('./soapRouter'));
+
+//TODO
 
 
 // catch 404 and forward to error handler
