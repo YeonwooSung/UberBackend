@@ -10,8 +10,12 @@ let logger = require('morgan');
 let app = express();
 
 const bodyParser = require('body-parser');
-const { soap } = require('strong-soap');
 require('body-parser-xml')(bodyParser);
+
+//TODO
+//const { soap } = require('strong-soap');
+const soap = require('soap');
+
 
 
 //basic set ups
