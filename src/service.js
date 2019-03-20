@@ -5,7 +5,15 @@ router.get('/', (req, res) => {
     res.send('hi');
 });
 
-router.post('/', (req, res) => {
+router.post('/lookup', (req, res) => {
+    res.send('hello');
+});
+
+router.post('/discovery', (req, res) => {
+    res.send('hello');
+});
+
+router.post('/access', (req, res) => {
     res.send('hello');
 });
 

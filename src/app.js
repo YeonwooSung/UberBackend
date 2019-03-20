@@ -35,6 +35,8 @@ app.use(bodyParser.xml());
 app.use('/soap', require('./soapRouter'));
 
 app.use('/subscribe', require('./subscribe'));
+app.use('/publish', require('./publish'));
+app.use('/service', require('./service'));
 
 //TODO
 
