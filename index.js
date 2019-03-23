@@ -1,4 +1,4 @@
-let app = require('./src/app');
+let app = require('./src/app').app;
 
 var debug = require('debug')('uberbackend:server');
 var http = require('http');

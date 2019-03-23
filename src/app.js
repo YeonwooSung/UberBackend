@@ -9,6 +9,8 @@ let logger = require('morgan');
 
 let app = express();
 
+let channel;
+
 const bodyParser = require('body-parser');
 require('body-parser-xml')(bodyParser);
 
@@ -21,11 +23,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.xml());
-
-
 //TODO
+let amqp = require('./amqp');
+
+//initialise the channel
+channel = amqp.initChannel('amqp://localhost');
 
 app.use('/soap', require('./soapRouter'));
 
@@ -52,4 +54,5 @@ app.use(function (err, req, res) {
 });
 
 
-module.exports = app;
+module.exports.app = app;
+module.exports.channel = channel;

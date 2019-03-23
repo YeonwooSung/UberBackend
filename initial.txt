@@ -1,0 +1,7 @@
+First, you need to download the rabbitmq from the url below.
+
+download site:
+    <https://www.rabbitmq.com/download.html>
+
+Next, run the rabbitmq server.
+//TODO linux version!!
