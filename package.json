@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/YeonwooSung/UberBackend#readme",
   "dependencies": {
+    "amqplib": "^0.5.3",
     "body-parser": "^1.18.3",
     "body-parser-xml": "^1.1.0",
     "cookie-parser": "^1.4.4",
@@ -24,6 +25,7 @@
     "express-soap": "^1.1.2",
     "jayson": "^2.1.2",
     "morgan": "^1.9.1",
+    "rabbit.js": "^0.4.4",
     "soap": "^0.26.0",
     "strong-soap": "^1.17.0"
   }

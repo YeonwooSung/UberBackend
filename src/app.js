@@ -12,11 +12,6 @@ let app = express();
 const bodyParser = require('body-parser');
 require('body-parser-xml')(bodyParser);
 
-//TODO
-//const { soap } = require('strong-soap');
-const soap = require('soap');
-
-
 
 //basic set ups
 app.use(logger('dev'));
@@ -34,8 +29,6 @@ app.use(bodyParser.xml());
 
 app.use('/soap', require('./soapRouter'));
 
-app.use('/subscribe', require('./subscribe'));
-app.use('/publish', require('./publish'));
 app.use('/service', require('./service'));
 
 //TODO
