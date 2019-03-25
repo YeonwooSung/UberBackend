@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-router.get('/', (req, res) => {
-    let url = 'https://login.uber.com/oauth/v2/authorize';
-    res.send('hi');
-});
+let passport = require('./app').passport;
+
+router.get('/', passport.authenticate('uber', { scope: ['profile'] }));
 
 module.exports = router;
