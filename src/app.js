@@ -24,10 +24,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 //TODO
-let amqp = require('./amqp');
 
 //initialise the channel
-channel = amqp.initChannel('amqp://localhost');
+channel = require('./amqp').initChannel('amqp://localhost');
 
 app.use('/soap', require('./soapRouter'));
 
