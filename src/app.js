@@ -9,8 +9,6 @@ let logger = require('morgan');
 
 let app = express();
 
-let channel;
-
 const bodyParser = require('body-parser');
 require('body-parser-xml')(bodyParser);
 
@@ -25,8 +23,30 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //TODO
 
+let amqp = require('./amqp');
+
+//get connection
+let conn = amqp.initConnection('amqp://localhost');
+
 //initialise the channel
-channel = require('./amqp').initChannel('amqp://localhost');
+let channel = amqp.initChannel(conn);
+
+let passport = require('passport');
+
+var uberStrategy = require('passport-uber-v2').Strategy;
+
+passport.use(
+    new uberStrategy({
+        clientID: CLIENT_ID,
+        clientSecret: CLIENT_SECRET,
+        callbackURL: 'http://localhost:8080/callback'
+    },
+    function (accessToken, refreshToken, profile, done) {
+        var user = profile;
+        user.accessToken = accessToken;
+        return done(null, user);
+    }
+));
 
 app.use('/soap', require('./soapRouter'));
 
