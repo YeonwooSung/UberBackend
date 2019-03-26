@@ -25,34 +25,35 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 let amqp = require('./amqp');
 
-//get connection
-let conn = amqp.initConnection('amqp://localhost');
+//initialise channel
+let channel = amqp.initChannel('amqp://localhost');
 
-//initialise the channel
-let channel = amqp.initChannel(conn);
 
 let passport = require('passport');
 let cookieSession = require('cookie-session');
 let flash = require('connect-flash');
 
+const AGE = 1000 * 60 * 60 * 24; // max age = 24 hours
+
 //use cookie session
 app.use(cookieSession({
     keys: ['uber_mom'],
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24 // max age 24 hours
+        maxAge: AGE
     }
 }));
 
 app.use(flash());
 
 
+//import uber strategy for uber authentication
 var uberStrategy = require('passport-uber-v2').Strategy;
 
 //use passport strategy for authenticating with uber by using OAuth 2.0 API.
 passport.use(
     new uberStrategy({
-        clientID: CLIENT_ID,
-        clientSecret: CLIENT_SECRET,
+        clientID: 'CLIENT_ID',
+        clientSecret: 'CLIENT_SECRET',
         callbackURL: 'http://localhost:8080/callback'
     },
     function (accessToken, refreshToken, profile, done) {
@@ -67,6 +68,17 @@ passport.use(
 app.use('/soap', require('./soapRouter'));
 
 app.use('/service', require('./service'));
+
+
+app.get('/callback', passport.authenticate('uber', { failureRedirect: '/login' }),
+    (req, res) => {
+        res.redirect('/');
+    }
+);
+
+
+app.use('/login', require('./login'));
+app.use('/auth', require('./auth'));
 
 //TODO
 
@@ -91,4 +103,3 @@ app.use(function (err, req, res) {
 
 module.exports.app = app;
 module.exports.channel = channel;
-module.exports.passport = passport;

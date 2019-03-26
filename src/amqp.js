@@ -9,64 +9,42 @@ const REPLY_QUEUE = 'amq.rabbitmq.reply-to';
 
 const EventEmitter = require('events');
 
-
 /**
- * Create the amqp channel.
+ * The aim of this function is to initialise the channel.
  *
  * @param url The url that should be connected.
- * @return {conn} The initialised connection
+ * @return {channel} The initialised channel
  */
-let initConnection = (url) => {
-    let con = null;
+let initChannel = (url) => {
+    let ch = null;
 
     //connect to rabbitmq
     amqplib.connect(url, (err, conn) => {
 
         if (conn) { //check error
-            con = conn;
+
+            // create channel
+            conn.createChannel((err, channel) => {
+                if (channel) {
+                    channel.responseEmitter = new EventEmitter();
+                    channel.responseEmitter.setMaxListeners(0);
+
+                    channel.consume(REPLY_QUEUE,
+                        msg => channel.responseEmitter.emit(msg.properties.correlationId, msg.content),
+                        { noAck: true }
+                    );
+
+                    ch = channel;
+                } else {
+                    console.log(err);
+                }
+            });
         } else {
             console.log(err);
-            con = undefined;
         }
     });
 
-    return con;
-}
-
-
-/**
- * Initialise the channel from the given connection.
- *
- * @param {@object} conn The connection object.
- * @return The initialised channel
- */
-let initChannel = (conn) => {
-    if (conn) {
-        let ch;
-
-        conn.createChannel((err, channel) => {
-            if (channel) {
-                channel.responseEmitter = new EventEmitter();
-                channel.responseEmitter.setMaxListeners(0);
-
-                channel.consume(REPLY_QUEUE,
-                    msg => channel.responseEmitter.emit(msg.properties.correlationId, msg.content),
-                    { noAck: true }
-                );
-
-                ch = channel;
-            } else {
-                console.log(err);
-                ch = undefined;
-            }
-        });
-
-        return ch;
-    } else {
-        console.log('The connection object is undefined!');
-
-        return undefined;
-    }
+    return ch;
 }
 
 /**
@@ -98,4 +76,3 @@ let generateRandomId = () => {
 module.exports.generateRandomId = generateRandomId;
 module.exports.send_RPC_message = send_RPC_message;
 module.exports.initChannel = initChannel;
-module.exports.initConnection = initConnection;

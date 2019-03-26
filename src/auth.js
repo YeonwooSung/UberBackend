@@ -3,6 +3,8 @@ const router = express.Router();
 
 let passport = require('./app').passport;
 
-router.get('/', passport.authenticate('uber', { scope: ['profile'] }));
+router.get('/', (req, res) => {
+    res.send('hi');
+});
 
 module.exports = router;
