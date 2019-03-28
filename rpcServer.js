@@ -9,14 +9,14 @@ amqp.connect('amqp://localhost')
         return conn.createChannel();
     })
     .then(ch => {
+
         ch.assertQueue(q, { durable: false });
         ch.prefetch(1);
         console.log(" [x] Awaiting RPC Requests");
+
         ch.consume(q, msg => {
 
-            const n = parseInt(msg.content.toString());
-
-            console.log(" [.] fib(%d)", n);
+            const content = parseInt(msg.content.toString());
 
             // start
             let tStart = Date.now();
@@ -37,7 +37,7 @@ amqp.connect('amqp://localhost')
             });
 
             ch.sendToQueue(msg.properties.replyTo,
-                new Buffer(r.toString()),
+                Buffer.from(r.toString(), 'utf8'),
                 { correlationId: msg.properties.correlationId });
             ch.ack(msg);
         })
