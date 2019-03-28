@@ -28,7 +28,6 @@ let amqp = require('./amqp');
 //initialise channel
 let channel = amqp.initChannel('amqp://localhost');
 
-
 let passport = require('passport');
 let cookieSession = require('cookie-session');
 let flash = require('connect-flash');
@@ -74,9 +73,15 @@ app.get('/callback', passport.authenticate('uber', { failureRedirect: '/login' }
     }
 );
 
+app.get('/test', (req, res) => {
+    amqp.send_RPC_message('test', 'uber_rpc_queue')
+    .then(msg => {
+        const result = JSON.parse(msg.toString());
+        res.json(result);
+    });
+});
 
 app.use('/login', require('./login'));
-app.use('/auth', require('./auth'));
 
 //TODO
 
