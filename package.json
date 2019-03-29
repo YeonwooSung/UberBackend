@@ -31,6 +31,7 @@
     "express-soap": "^1.1.2",
     "helmet": "^3.16.0",
     "jayson": "^2.1.2",
+    "kue": "^0.11.6",
     "morgan": "^1.9.1",
     "passport": "^0.4.0",
     "passport-http": "^0.3.0",
