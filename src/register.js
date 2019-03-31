@@ -9,12 +9,12 @@ router.get('/', (req, res) => {
 
 
 /**
- * Handle the POST request for the log in.
+ * Handle the POST request to register a new user.
  */
 router.post('/', (req, res) => {
-    let { id, pw } = req.body;
+    let { userName, id, pw, phoneNum } = req.body;
 
-    amqp.send_RPC_message(`login/${id}/${pw}`, 'uber_rpc_queue')
+    amqp.send_RPC_message(`register/${userName}/${id}/${pw}/${phoneNum}`, 'uber_rpc_queue')
         .then(msg => {
             const result = JSON.parse(msg.toString());
             res.json(result);

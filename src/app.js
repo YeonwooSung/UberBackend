@@ -64,9 +64,6 @@ passport.use(
 );
 
 
-app.use('/driver', require('./driver'));
-
-
 app.get('/callback', passport.authenticate('uber', { failureRedirect: '/login' }),
     (req, res) => {
         res.redirect('/');
@@ -86,6 +83,8 @@ function do_RPC(res) {
 }
 
 app.use('/login', require('./login'));
+app.use('/register', require('./register'));
+app.use('/driver', require('./driver'));
 
 //TODO
 
