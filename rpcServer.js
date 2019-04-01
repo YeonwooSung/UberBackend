@@ -16,13 +16,32 @@ amqp.connect('amqp://localhost')
 
         ch.consume(q, msg => {
 
-            const content = parseInt(msg.content.toString());
+            const content = msg.content.toString();
+
+            let r = 'test';
 
             // start
             let tStart = Date.now();
 
-            //TODO rpc section
-            let r = 'test';
+            if (content.startsWith('login')) {
+
+                //log in message
+                r = processLogin(content);
+
+            } else if (content.startsWith('register')) {
+
+                //register message
+                r = validateRegister(content);
+
+            } else if (content == 'driverList') {
+
+                //get available driver list
+                r = JSON.stringify(getDriverList());
+
+            } else {
+                //error
+                r = 'Error: invalid message!'
+            }
 
             //TODO
 
@@ -43,3 +62,43 @@ amqp.connect('amqp://localhost')
         })
     }
 );
+
+
+/**
+ * A function that gets the list of available drivers.
+ */
+function getDriverList() {
+    let list = [{ name: 'James', phoneNumber: '078498765473', currentLocation: { latitude: 56.333333333333, longitude: -2.7833333333333}}];
+
+    return list;
+}
+
+
+/**
+ * A function to validate the log in process.
+ * @param {*} msg 
+ */
+function processLogin(msg) {
+    let splittedMsg = msg.split('/');
+
+    let [ a, id, pw ] = splittedMsg;
+
+    //TODO log in
+
+    return '';
+}
+
+
+/**
+ * A function to validate the register process.
+ * @param {*} msg 
+ */
+function validateRegister(msg) {
+    let splittedMsg = msg.split('/');
+
+    let [a, name, id, pw, phoneNumber] = splittedMsg;
+
+    //TODO validate the register process
+
+    return '';
+}
