@@ -18,14 +18,14 @@ amqp.connect('amqp://localhost')
 
             const contentStr = msg.content.toString();
 
+            let r = 'test';
+
+            // start time
+            let tStart = Date.now();
+
             try {
 
                 let content = JSON.parse(contentStr);
-
-                let r = 'test';
-
-                // start
-                let tStart = Date.now();
 
                 if (content['subject'] == 'login') {
 
@@ -42,12 +42,15 @@ amqp.connect('amqp://localhost')
                     //get available driver list
                     r = JSON.stringify(getDriverList());
 
+                } else if (content['subject'] == 'test') {
+                    r = 'test';
                 } else {
 
                     //error
                     r = 'Error: invalid message!'
 
                 }
+
             } catch {
                 r = 'Error::FormatError: The message format is not a JSON!'
             }
