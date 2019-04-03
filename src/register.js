@@ -13,8 +13,9 @@ router.get('/', (req, res) => {
  */
 router.post('/', (req, res) => {
     let { userName, id, pw, phoneNum } = req.body;
+    let messageObj = { subject: 'register', name: userName, id: id, pw: pw, phoneNumber: phoneNum };
 
-    amqp.send_RPC_message(`register/${userName}/${id}/${pw}/${phoneNum}`, 'uber_rpc_queue')
+    amqp.send_RPC_message(JSON.stringify(messageObj), 'uber_rpc_queue')
         .then(msg => {
             const result = JSON.parse(msg.toString());
             //TODO error handling?

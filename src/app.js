@@ -71,11 +71,13 @@ app.get('/callback', passport.authenticate('uber', { failureRedirect: '/login' }
 );
 
 app.get('/test', (req, res) => {
-    do_RPC(res);
+    do_RPC_Test(res);
 });
 
-function do_RPC(res) {
-    amqp.send_RPC_message('test', 'uber_rpc_queue')
+function do_RPC_Test(res) {
+    let messageObj = { subject: 'test' };
+
+    amqp.send_RPC_message(JSON.stringify(messageObj), 'uber_rpc_queue')
     .then(msg => {
         const result = JSON.parse(msg.toString());
         res.json(result);

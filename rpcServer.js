@@ -16,31 +16,40 @@ amqp.connect('amqp://localhost')
 
         ch.consume(q, msg => {
 
-            const content = msg.content.toString();
+            const contentStr = msg.content.toString();
 
-            let r = 'test';
+            try {
 
-            // start
-            let tStart = Date.now();
+                let content = JSON.parse(contentStr);
 
-            if (content.startsWith('login')) {
+                let r = 'test';
 
-                //log in message
-                r = processLogin(content);
+                // start
+                let tStart = Date.now();
 
-            } else if (content.startsWith('register')) {
+                if (content['subject'] == 'login') {
 
-                //register message
-                r = validateRegister(content);
+                    //log in message
+                    r = processLogin(content);
 
-            } else if (content == 'driverList') {
+                } else if (content['subject'] == 'register') {
 
-                //get available driver list
-                r = JSON.stringify(getDriverList());
+                    //register message
+                    r = validateRegister(content);
 
-            } else {
-                //error
-                r = 'Error: invalid message!'
+                } else if (content['subject'] == 'driverList') {
+
+                    //get available driver list
+                    r = JSON.stringify(getDriverList());
+
+                } else {
+
+                    //error
+                    r = 'Error: invalid message!'
+
+                }
+            } catch {
+                r = 'Error::FormatError: The message format is not a JSON!'
             }
 
             //TODO
@@ -48,8 +57,7 @@ amqp.connect('amqp://localhost')
             // finish
             let tEnd = Date.now();
 
-            // to send object as a message,
-            // you have to call JSON.stringify
+            // to send object as a message, call JSON.stringify to convert the JSON object to string
             r = JSON.stringify({
                 result: r,
                 time: (tEnd - tStart)
@@ -57,7 +65,9 @@ amqp.connect('amqp://localhost')
 
             ch.sendToQueue(msg.properties.replyTo,
                 Buffer.from(r.toString(), 'utf8'),
-                { correlationId: msg.properties.correlationId });
+                { correlationId: msg.properties.correlationId }
+            );
+
             ch.ack(msg);
         })
     }
@@ -76,12 +86,10 @@ function getDriverList() {
 
 /**
  * A function to validate the log in process.
- * @param {*} msg 
+ * @param {*} obj The message object that contains data for log in process.
  */
-function processLogin(msg) {
-    let splittedMsg = msg.split('/');
-
-    let [ a, id, pw ] = splittedMsg;
+function processLogin(obj) {
+    let {subject, id, pw} = obj;
 
     //TODO log in
 
@@ -91,12 +99,10 @@ function processLogin(msg) {
 
 /**
  * A function to validate the register process.
- * @param {*} msg 
+ * @param {*} obj The object that contains data for register process.
  */
-function validateRegister(msg) {
-    let splittedMsg = msg.split('/');
-
-    let [a, name, id, pw, phoneNumber] = splittedMsg;
+function validateRegister(obj) {
+    let {subject, name, id, pw, phoneNumber} = obj;
 
     //TODO validate the register process
 
