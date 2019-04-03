@@ -116,7 +116,7 @@ function processLogin(obj) {
     let r;
 
     if (subject == 'login' && id && pw) {
-        r = readCSV(id, pw);
+        r = readCSV(id, pw, './user.csv');
     } else {
         r = LOGIN_ERROR;
     }
@@ -125,10 +125,15 @@ function processLogin(obj) {
 }
 
 
-function readCSV(id, pw) {
+/**
+ * Read and process the csv file for the log in process.
+ * @param {*} id 
+ * @param {*} pw 
+ */
+function readCSV(id, pw, filepath) {
     let result = NO_REGISTERED_USER;
 
-    var lines = require('fs').readFileSync('./user.csv', 'utf-8')
+    var lines = require('fs').readFileSync(filepath, 'utf-8')
         .split('\n')
         .filter(Boolean);
 
