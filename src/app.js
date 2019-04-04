@@ -25,9 +25,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 let amqp = require('./amqp');
 
-//initialise channel
-let channel = amqp.initChannel('amqp://localhost');
-
 let passport = require('passport');
 let cookieSession = require('cookie-session');
 let flash = require('connect-flash');

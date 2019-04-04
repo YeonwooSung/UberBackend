@@ -9,24 +9,22 @@ const REPLY_QUEUE = 'amq.rabbitmq.reply-to';
 
 const EventEmitter = require('events');
 
-let channel;
+
+//make a connection object to connect server and RabbitMQ
+let conn = amqplib.connect('amqp://localhost');
 
 /**
  * The aim of this function is to initialise the channel.
  *
- * @param url The url that should be connected.
  * @return {channel} The initialised channel
  */
-let initChannel = (url) => amqplib.connect(url)
-    .then(conn => conn.createChannel()) // create channel
+let initChannel = () => conn.then(conn => conn.createChannel()) // create channel
     .then(ch => {
         ch.responseEmitter = new EventEmitter();
         ch.responseEmitter.setMaxListeners(0);
         ch.consume(REPLY_QUEUE,
             msg => ch.responseEmitter.emit(msg.properties.correlationId, msg.content),
             { noAck: true });
-
-        channel = ch;
 
         return ch;
     });
@@ -38,14 +36,40 @@ let initChannel = (url) => amqplib.connect(url)
  * @param channel The channel to use
  * @param message The message that should be sent
  * @param rpcQueue The message queue
+ *
+ * @return {Promise} new promise instance
  */
 let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
-    // unique random string
-    const correlationId = generateRandomId();
 
-    channel.responseEmitter.once(correlationId, resolve);
+    conn.then(conn => conn.createChannel()) // create channel
+    .then(ch => {
+        ch.responseEmitter = new EventEmitter();
+        ch.responseEmitter.setMaxListeners(0);
+        ch.consume(REPLY_QUEUE,
+            msg => ch.responseEmitter.emit(msg.properties.correlationId, msg.content),
+            { noAck: true }
+        );
 
-    channel.sendToQueue(rpcQueue, Buffer.from(message, 'utf8'), { correlationId, replyTo: REPLY_QUEUE });
+        // unique random string
+        const correlationId = generateRandomId();
+
+        ch.assertQueue(rpcQueue, { durable: false });
+        ch.responseEmitter.once(correlationId, resolve);
+
+
+        //send a message to the message queue with the given name
+        ch.sendToQueue(rpcQueue, Buffer.from(message, 'utf8'), {
+            correlationId,
+            replyTo: REPLY_QUEUE,
+            persistent: true //set persistent option to true to mark the messages as persistent
+        });
+
+        //close the channel after 5 seconds (5000 miliseconds)
+        setTimeout(function() {
+            ch.close();
+        }, 5000);
+    });
+
 });
 
 
@@ -61,4 +85,3 @@ let generateRandomId = () => {
 
 module.exports.generateRandomId = generateRandomId;
 module.exports.send_RPC_message = send_RPC_message;
-module.exports.initChannel = initChannel;
