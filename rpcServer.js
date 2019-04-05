@@ -32,7 +32,9 @@ amqp.connect('amqp://localhost')
     .then(ch => {
 
         ch.assertQueue(q, { durable: false });
+
         ch.prefetch(1);
+
         console.log(" [x] Awaiting RPC Requests");
 
         ch.consume(q, msg => {
@@ -43,6 +45,23 @@ amqp.connect('amqp://localhost')
 
             // start time
             let tStart = Date.now();
+
+
+            // set the time out for the long delay issue
+            let timeOut = setTimeout(() => {
+
+                // send the message to the message queue.
+                ch.sendToQueue(msg.properties.replyTo,
+                    Buffer.from(
+                        JSON.stringify({ 
+                        result: 'Error: time out error!',
+                        time: (tEnd - tStart)
+                        }),
+                        'utf8'
+                    ),
+                    { correlationId: msg.properties.correlationId }
+                );
+            }, 4500);
 
             try {
 
@@ -78,6 +97,9 @@ amqp.connect('amqp://localhost')
 
             // get the finish time
             let tEnd = Date.now();
+
+            // clear the time out
+            clearTimeout(timeOut);
 
             // to send object as a message, call JSON.stringify to convert the JSON object to string
             r = JSON.stringify({

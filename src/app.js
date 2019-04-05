@@ -107,4 +107,3 @@ app.use(function (err, req, res) {
 
 
 module.exports.app = app;
-module.exports.channel = channel;
