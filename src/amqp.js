@@ -43,14 +43,12 @@ let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
 
     conn.then(conn => conn.createChannel()) // create channel
     .then(ch => {
-        // make the queue durable, so that the message queue could be protected even when the queue crashed
-        ch.assertQueue(rpcQueue, { durable: true });
 
         ch.responseEmitter = new EventEmitter();
         ch.responseEmitter.setMaxListeners(0);
         ch.consume(REPLY_QUEUE,
             msg => ch.responseEmitter.emit(msg.properties.correlationId, msg.content),
-            { noAck: true }
+            { noAck: true } //consumer does not need to send acknowledgement to the message queue
         );
 
         // unique random string
