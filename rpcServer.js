@@ -31,8 +31,18 @@ amqp.connect('amqp://localhost')
     })
     .then(ch => {
 
-        ch.assertQueue(q, { durable: false });
+        // make the queue durable, so that the message queue could be protected even when the queue crashed
+        ch.assertQueue(q, { durable: true });
 
+        /* 
+         * Set the prefetch to 1.
+         *
+         * Make sure that only 1 message delivered to the RPC server.
+         *
+         * A common mistake with the RabbitMQ prefetch value is to have an unlimited prefetch, 
+         * where one client receives all messages and runs out of memory and crashes, 
+         * and then all messages are re-delivered again.
+         */
         ch.prefetch(1);
 
         console.log(" [x] Awaiting RPC Requests");

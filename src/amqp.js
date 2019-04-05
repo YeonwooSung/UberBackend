@@ -43,6 +43,9 @@ let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
 
     conn.then(conn => conn.createChannel()) // create channel
     .then(ch => {
+        // make the queue durable, so that the message queue could be protected even when the queue crashed
+        ch.assertQueue(rpcQueue, { durable: true });
+
         ch.responseEmitter = new EventEmitter();
         ch.responseEmitter.setMaxListeners(0);
         ch.consume(REPLY_QUEUE,
@@ -53,7 +56,6 @@ let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
         // unique random string
         const correlationId = generateRandomId();
 
-        ch.assertQueue(rpcQueue, { durable: false });
         ch.responseEmitter.once(correlationId, resolve);
 
 
