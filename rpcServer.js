@@ -2,12 +2,9 @@
 
 const amqp = require('amqplib');
 
-const q = 'uber_rpc_queue';
-
 
 //global variables for the csv file
 let fs = require('fs');
-let readline = require('readline');
 let parse = require('json2csv').parse;
 const FILE_EXIST = 'The \'user.csv\' file exists';
 
@@ -25,109 +22,118 @@ const FILE_ERROR = 'Error: Error while writing to the csv file';
 const NO_REGISTERED_USER = 'ERROR::LOGIN_ERROR: No registered user';
 
 
-amqp.connect('amqp://localhost')
-    .then(conn => {
-        return conn.createChannel();
-    })
-    .then(ch => {
+let conn = amqp.connect('amqp://localhost')
 
-        // make the queue durable, so that the message queue could be protected even when the queue crashed
-        ch.assertQueue(q, { durable: true });
+function openAndUseChannel(q) {
+    conn.then(conn => {
+            return conn.createChannel();
+        })
+        .then(ch => {
 
-        /* 
-         * Set the prefetch to 1.
-         *
-         * Make sure that only 1 message delivered to the RPC server.
-         *
-         * A common mistake with the RabbitMQ prefetch value is to have an unlimited prefetch, 
-         * where one client receives all messages and runs out of memory and crashes, 
-         * and then all messages are re-delivered again.
-         */
-        ch.prefetch(1);
+            // make the queue durable, so that the message queue could be protected even when the queue crashed
+            ch.assertQueue(q, { durable: true });
 
-        console.log(" [x] Awaiting RPC Requests");
+            /* 
+             * Set the prefetch to 1.
+             *
+             * Make sure that only 1 message delivered to the RPC server.
+             *
+             * A common mistake with the RabbitMQ prefetch value is to have an unlimited prefetch, 
+             * where one client receives all messages and runs out of memory and crashes, 
+             * and then all messages are re-delivered again.
+             */
+            ch.prefetch(1);
 
-        ch.consume(q, msg => {
+            console.log(" [x] Awaiting RPC Requests");
 
-            const contentStr = msg.content.toString();
+            ch.consume(q, msg => {
 
-            let r = 'test';
+                const contentStr = msg.content.toString();
 
-            // start time
-            let tStart = Date.now();
+                let r = 'test';
+
+                // start time
+                let tStart = Date.now();
 
 
-            // set the time out for the long delay issue
-            let timeOut = setTimeout(() => {
+                // set the time out for the long delay issue
+                let timeOut = setTimeout(() => {
+
+                    // send the message to the message queue.
+                    ch.sendToQueue(msg.properties.replyTo,
+                        Buffer.from(
+                            JSON.stringify({
+                                result: 'Error: time out error!',
+                                time: (tEnd - tStart)
+                            }),
+                            'utf8'
+                        ),
+                        { correlationId: msg.properties.correlationId }
+                    );
+                }, 4500);
+
+                try {
+
+                    let content = JSON.parse(contentStr);
+
+                    if (content['subject'] == 'login') {
+
+                        //log in message
+                        r = processLogin(content);
+
+                    } else if (content['subject'] == 'register') {
+
+                        //register message
+                        r = validateRegister(content);
+
+                    } else if (content['subject'] == 'driverList') {
+
+                        //get available driver list
+                        r = JSON.stringify(getDriverList());
+
+                    } else if (content['subject'] == 'test') {
+                        r = 'test';
+                    } else {
+
+                        //error
+                        r = INVALID_MSG;
+
+                    }
+
+                } catch {
+                    r = FORMAT_ERROR;
+                }
+
+                // get the finish time
+                let tEnd = Date.now();
+
+                // clear the time out
+                clearTimeout(timeOut);
+
+                // to send object as a message, call JSON.stringify to convert the JSON object to string
+                r = JSON.stringify({
+                    result: r,
+                    time: (tEnd - tStart)
+                });
+
 
                 // send the message to the message queue.
                 ch.sendToQueue(msg.properties.replyTo,
-                    Buffer.from(
-                        JSON.stringify({ 
-                        result: 'Error: time out error!',
-                        time: (tEnd - tStart)
-                        }),
-                        'utf8'
-                    ),
+                    Buffer.from(r.toString(), 'utf8'),
                     { correlationId: msg.properties.correlationId }
                 );
-            }, 4500);
 
-            try {
-
-                let content = JSON.parse(contentStr);
-
-                if (content['subject'] == 'login') {
-
-                    //log in message
-                    r = processLogin(content);
-
-                } else if (content['subject'] == 'register') {
-
-                    //register message
-                    r = validateRegister(content);
-
-                } else if (content['subject'] == 'driverList') {
-
-                    //get available driver list
-                    r = JSON.stringify(getDriverList());
-
-                } else if (content['subject'] == 'test') {
-                    r = 'test';
-                } else {
-
-                    //error
-                    r = INVALID_MSG;
-
-                }
-
-            } catch {
-                r = FORMAT_ERROR;
-            }
-
-            // get the finish time
-            let tEnd = Date.now();
-
-            // clear the time out
-            clearTimeout(timeOut);
-
-            // to send object as a message, call JSON.stringify to convert the JSON object to string
-            r = JSON.stringify({
-                result: r,
-                time: (tEnd - tStart)
-            });
+                ch.ack(msg);
+            })
+        });
+}
 
 
-            // send the message to the message queue.
-            ch.sendToQueue(msg.properties.replyTo,
-                Buffer.from(r.toString(), 'utf8'),
-                { correlationId: msg.properties.correlationId }
-            );
+// open 3 channels - each for log in, get driver list, and register
 
-            ch.ack(msg);
-        })
-    }
-);
+openAndUseChannel('uber_rpc_queue_login');
+openAndUseChannel('uber_rpc_queue_driver');
+openAndUseChannel('uber_rpc_queue_register');
 
 
 /**

@@ -23,7 +23,7 @@ router.post('/', (req, res) => {
         res.end(JSON.stringify({ title: 'RPC not running', msg: 'No response from RPC server!' }));
     }, 7000);
 
-    amqp.send_RPC_message(JSON.stringify(messageObj), 'uber_rpc_queue')
+    amqp.send_RPC_message(JSON.stringify(messageObj), 'uber_rpc_queue_register')
         .then(msg => {
             const result = JSON.parse(msg.toString());
             //TODO error handling?

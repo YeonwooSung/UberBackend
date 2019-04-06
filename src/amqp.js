@@ -11,7 +11,9 @@ const EventEmitter = require('events');
 
 
 //make a connection object to connect server and RabbitMQ
-let conn = amqplib.connect('amqp://localhost');
+let conn = amqplib.connect('amqp://localhost', {
+    noDelay: true //add noDelay option to use no delay tcp socket.
+});
 
 
 
