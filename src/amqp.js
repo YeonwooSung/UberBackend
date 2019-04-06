@@ -13,21 +13,6 @@ const EventEmitter = require('events');
 //make a connection object to connect server and RabbitMQ
 let conn = amqplib.connect('amqp://localhost');
 
-/**
- * The aim of this function is to initialise the channel.
- *
- * @return {channel} The initialised channel
- */
-let initChannel = () => conn.then(conn => conn.createChannel()) // create channel
-    .then(ch => {
-        ch.responseEmitter = new EventEmitter();
-        ch.responseEmitter.setMaxListeners(0);
-        ch.consume(REPLY_QUEUE,
-            msg => ch.responseEmitter.emit(msg.properties.correlationId, msg.content),
-            { noAck: true });
-
-        return ch;
-    });
 
 
 /**
@@ -41,14 +26,39 @@ let initChannel = () => conn.then(conn => conn.createChannel()) // create channe
  */
 let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
 
-    conn.then(conn => conn.createChannel()) // create channel
+    //open a test channel to check if the connection is still alive.
+    conn.then(con => con.createChannel())
+    .then(ch => ch.close())
+    .catch(err => {
+        console.log('Try reopen the connection to prevent connection failures');
+        conn = amqplib.connect('amqp://localhost');
+    });
+
+
+    // open channel to send RPC message to the RPC server.
+    conn.then(con => {
+        con.on('error', (err) => {
+            console.log('RabbitMQ server is down now!');
+
+            console.log('\n\nTry to reconnect....')
+            conn = amqplib.connect('amqp://localhost');
+        });
+
+        return con.createChannel() // create channel
+    })
     .then(ch => {
 
         ch.responseEmitter = new EventEmitter();
         ch.responseEmitter.setMaxListeners(0);
         ch.consume(REPLY_QUEUE,
-            msg => ch.responseEmitter.emit(msg.properties.correlationId, msg.content),
-            { noAck: true } //consumer does not need to send acknowledgement to the message queue
+            msg => {
+                if (msg) {
+                    ch.responseEmitter.emit(msg.properties.correlationId, msg.content)
+                } else {
+                    console.log('No message to consume!');
+                }
+            },
+            { noAck: true }
         );
 
         // unique random string
