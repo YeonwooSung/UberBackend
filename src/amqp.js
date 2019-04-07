@@ -52,6 +52,16 @@ let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
 
         ch.responseEmitter = new EventEmitter();
         ch.responseEmitter.setMaxListeners(0);
+
+        ch.on('error', (err) => {
+            console.log(err);
+
+            console.log('Requeue unacknowledged messages on this channel.');
+
+            // Requeue unacknowledged messages on this channel.
+            ch.recover(); //TODO is this the correct way??
+        });
+
         ch.consume(REPLY_QUEUE,
             msg => {
                 if (msg) {
@@ -63,9 +73,13 @@ let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
             { noAck: true }
         );
 
-        // unique random string
+        // unique random string, which will be used to distinguish the reply message
         const correlationId = generateRandomId();
 
+        /*
+         * EventEmitter.once(eventName, listener) runs the listener when the event with the given name has been occurred.
+         * Henceforth, by using the unique random string, we could distinguish the reply message that we are looking for.
+         */
         ch.responseEmitter.once(correlationId, resolve);
 
 
