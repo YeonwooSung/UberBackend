@@ -70,7 +70,7 @@ function openAndUseChannel(q) {
                         ),
                         { correlationId: msg.properties.correlationId }
                     );
-                }, 4500);
+                }, 3000);
 
                 try {
 

@@ -93,7 +93,7 @@ let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
         //close the channel after 5 seconds (5000 miliseconds)
         setTimeout(function() {
             ch.close();
-        }, 5000);
+        }, 4000);
     });
 
 });
