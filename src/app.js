@@ -61,16 +61,28 @@ passport.use(
 );
 
 
+/**
+ * Callback page for uber authentication process.
+ */
 app.get('/callback', passport.authenticate('uber', { failureRedirect: '/login' }),
     (req, res) => {
         res.redirect('/');
     }
 );
 
+
+/**
+ * GET - test page
+ */
 app.get('/test', (req, res) => {
     do_RPC_Test(res);
 });
 
+
+/**
+ * A test function to send and receive a test message to/from the rpc server.
+ * @param {*} res 
+ */
 function do_RPC_Test(res) {
     let messageObj = { subject: 'test' };
 
