@@ -27,7 +27,7 @@ router.post('/', (req, res) => {
     amqp.send_RPC_message(JSON.stringify(messageObj), 'uber_rpc_queue_login')
         .then(msg => {
             const result = JSON.parse(msg.toString());
-            //TODO error handling?
+
             if (checker) {
                 clearTimeout(timeOut);
                 res.json(result);
