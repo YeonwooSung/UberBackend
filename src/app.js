@@ -21,8 +21,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-//TODO
-
 let amqp = require('./amqp');
 
 let passport = require('passport');
@@ -96,8 +94,6 @@ function do_RPC_Test(res) {
 app.use('/login', require('./login'));
 app.use('/register', require('./register'));
 app.use('/driver', require('./driver'));
-
-//TODO
 
 
 // catch 404 and forward to error handler
