@@ -15,6 +15,18 @@ let conn = amqplib.connect('amqp://localhost', {
     noDelay: true //add noDelay option to use no delay tcp socket.
 });
 
+//TODO
+let numOfChannels = 0;
+
+let checkNumOfChannels = () => {
+    if (numOfChannels > 1000) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+//TODO
 
 
 /**
@@ -27,15 +39,6 @@ let conn = amqplib.connect('amqp://localhost', {
  * @return {Promise} new promise instance
  */
 let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
-
-    //open a test channel to check if the connection is still alive.
-    conn.then(con => con.createChannel())
-    .then(ch => ch.close())
-    .catch(err => {
-        console.log('Try reopen the connection to prevent connection failures');
-        conn = amqplib.connect('amqp://localhost');
-    });
-
 
     // open channel to send RPC message to the RPC server.
     conn.then(con => {
@@ -53,6 +56,12 @@ let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
         ch.responseEmitter = new EventEmitter();
         ch.responseEmitter.setMaxListeners(0);
 
+        numOfChannels += 1;
+
+        ch.on('close', () => {
+            numOfChannels -= 1;
+        });
+
         ch.on('error', (err) => {
             console.log(err);
 
@@ -61,6 +70,11 @@ let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
             // Requeue unacknowledged messages on this channel.
             ch.recover(); //TODO is this the correct way??
         });
+
+        //close the channel after 3 seconds (3000 miliseconds)
+        setTimeout(function() {
+            ch.close();
+        }, 3000);
 
         ch.consume(REPLY_QUEUE,
             msg => {
@@ -90,10 +104,6 @@ let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
             persistent: true //set persistent option to true to mark the messages as persistent
         });
 
-        //close the channel after 5 seconds (5000 miliseconds)
-        setTimeout(function() {
-            ch.close();
-        }, 4000);
     });
 
 });
@@ -111,3 +121,4 @@ let generateRandomId = () => {
 
 module.exports.generateRandomId = generateRandomId;
 module.exports.send_RPC_message = send_RPC_message;
+module.exports.checkNumOfChannels = checkNumOfChannels;

@@ -5,6 +5,10 @@ function sleep(time) {
     return new Promise((resolve) => setTimeout(resolve, time));
 }
 
+/**
+ * A function that has an endless loop to send a number of POST request to ask the server for log in process.
+ * @param {*} num 
+ */
 async function loopRequest(num) {
     console.log(num);
 
@@ -27,6 +31,10 @@ async function loopRequest(num) {
         });
 
         await sleep(500);
+
+        request('http://localhost:8080/driver/:available', { method: 'GET' }, (err, res, body) => {
+            console.log(body);
+        })
     }
 }
 
