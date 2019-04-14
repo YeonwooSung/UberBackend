@@ -25,13 +25,46 @@ const NO_REGISTERED_USER = 'ERROR::LOGIN_ERROR: No registered user';
 let conn = amqp.connect('amqp://localhost')
 
 function openAndUseChannel(q) {
-    conn.then(conn => {
-            return conn.createChannel();
+    conn.then(con => {
+            con.on('error', (err) => {
+                console.log('RabbitMQ server is down now!');
+
+                console.log('\n\nTry to reconnect....')
+                conn = amqp.connect('amqp://localhost');
+
+                setTimeout(() => {
+                    openAndUseChannel(q);
+                }, 5000);
+            });
+
+            return con.createChannel();
         })
         .then(ch => {
 
-            // make the queue durable, so that the message queue could be protected even when the queue crashed
-            ch.assertQueue(q, { durable: true });
+            ch.checkQueue(q)
+                .then((ok) => {
+                    console.log(ok);
+
+                    // make the queue durable, so that the message queue could be protected even when the queue crashed
+                    ch.assertQueue(q, { durable: true });
+                })
+                .catch((err) => {
+                    if (err) {
+                        setTimeout(() => {
+                            // make the queue durable, so that the message queue could be protected even when the queue crashed
+                            ch.assertQueue(q, { durable: true });
+                        }, 10000);
+                    }
+                })
+
+            ch.on('error', (err) => {
+                console.log(err);
+
+                console.log('Requeue unacknowledged messages on this channel.');
+
+                // Requeue unacknowledged messages on this channel.
+                ch.recover(); //TODO is this the correct way??
+            });
 
             /* 
              * Set the prefetch to 1.
@@ -125,7 +158,7 @@ function openAndUseChannel(q) {
 
                 ch.ack(msg);
             })
-        });
+        })
 }
 
 
@@ -174,8 +207,6 @@ function readCSV(id, pw, filepath) {
     var lines = require('fs').readFileSync(filepath, 'utf-8')
         .split('\n')
         .filter(Boolean);
-
-    console.log(lines.length);
 
     let newid = '\"' + id + '\"';
     let newpw = '\"' + pw + '\"';
