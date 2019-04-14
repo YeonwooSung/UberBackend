@@ -15,7 +15,6 @@ let conn = amqplib.connect('amqp://localhost', {
     noDelay: true //add noDelay option to use no delay tcp socket.
 });
 
-//TODO
 let numOfChannels = 0;
 
 let checkNumOfChannels = () => {
@@ -25,8 +24,6 @@ let checkNumOfChannels = () => {
         return false;
     }
 }
-
-//TODO
 
 
 /**
@@ -59,16 +56,18 @@ let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
         numOfChannels += 1;
 
         ch.on('close', () => {
-            numOfChannels -= 1;
+            numOfChannels -= 1; //decrease the number of channels when the channel is closed
         });
 
+
+        // Error handler to recover the channel
         ch.on('error', (err) => {
             console.log(err);
 
             console.log('Requeue unacknowledged messages on this channel.');
 
             // Requeue unacknowledged messages on this channel.
-            ch.recover(); //TODO is this the correct way??
+            ch.recover();
         });
 
         //close the channel after 3 seconds (3000 miliseconds)
@@ -79,8 +78,10 @@ let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
         ch.consume(REPLY_QUEUE,
             msg => {
                 if (msg) {
+                    //emit the message to consume it
                     ch.responseEmitter.emit(msg.properties.correlationId, msg.content)
                 } else {
+                    //alert to let the user know that there is no message to consume
                     console.log('No message to consume!');
                 }
             },
