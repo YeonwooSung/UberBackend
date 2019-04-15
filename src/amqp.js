@@ -51,9 +51,9 @@ let send_RPC_message = (message, rpcQueue) => new Promise(resolve => {
     .then(ch => {
 
         ch.responseEmitter = new EventEmitter();
-        ch.responseEmitter.setMaxListeners(0);
+        ch.responseEmitter.setMaxListeners(0); //set max listeners to 0 -> no limit
 
-        numOfChannels += 1;
+        numOfChannels += 1; //increase the number of channels when the channel is opened
 
         ch.on('close', () => {
             numOfChannels -= 1; //decrease the number of channels when the channel is closed

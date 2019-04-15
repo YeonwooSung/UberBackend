@@ -31,7 +31,7 @@ router.get('/:available', (req, res) => {
         let timeOut = setTimeout(() => {
             checker = false;
             res.end(JSON.stringify({ title: 'RPC not running', msg: 'No response from RPC server!' }));
-        }, 5000);
+        }, 7000);
 
         amqp.send_RPC_message(JSON.stringify(messageObj), 'uber_rpc_queue_driver')
             .then(msg => {

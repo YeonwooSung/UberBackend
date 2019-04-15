@@ -193,7 +193,7 @@ function processLogin(obj) {
 
     let r;
 
-    if (subject == 'login' && id && pw) {
+    if (subject == 'login' && id && pw && fs.existsSync('./user.csv')) {
         r = readCSV(id, pw, './user.csv');
     } else {
         r = LOGIN_ERROR;
