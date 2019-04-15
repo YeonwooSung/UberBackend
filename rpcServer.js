@@ -24,6 +24,11 @@ const NO_REGISTERED_USER = 'ERROR::LOGIN_ERROR: No registered user';
 
 let conn = amqp.connect('amqp://localhost')
 
+
+/**
+ * Open the channel for the given name of queue.
+ * @param {*} q 
+ */
 function openAndUseChannel(q) {
     conn.then(con => {
             con.on('error', (err) => {
@@ -101,6 +106,7 @@ function openAndUseChannel(q) {
                             }),
                             'utf8'
                         ),
+                        //get the correlationID, which is the unique id string that the publisher used to check the message
                         { correlationId: msg.properties.correlationId }
                     );
                 }, 3000);
@@ -153,10 +159,11 @@ function openAndUseChannel(q) {
                 // send the message to the message queue.
                 ch.sendToQueue(msg.properties.replyTo,
                     Buffer.from(r.toString(), 'utf8'),
+                    //set the correlationID, which is the unique id string that the publisher used to check the message
                     { correlationId: msg.properties.correlationId }
                 );
 
-                ch.ack(msg);
+                ch.ack(msg); //send a acknowledgement to the message queue, as the RPC server finished reading and parsing message.
             })
         })
 }
